@@ -6,7 +6,7 @@
     "uploadFile": "Upload File",
     "uploadFileDesc": "CSV, TSV, JSON, or Excel",
     "pasteData": "Paste Data",
-    "pasteDataDesc": "Paste from clipboard",
+    "pasteDataDesc": "Type in a sheet or paste from Excel",
     "extractData": "Data Loading Agent",
     "extractDataDesc": "Find and extract data with AI",
     "loadFromUrl": "Load from URL",
@@ -26,6 +26,22 @@
     },
     "helperText": {
       "urlInvalid": "Enter a valid URL starting with http://, https://, or /"
+    },
+    "sheet": {
+      "modeToggleLabel": "Paste input mode",
+      "modeSheet": "Sheet",
+      "modeText": "Text",
+      "firstRowHeader": "First row is header",
+      "addRow": "Row",
+      "addColumn": "Column",
+      "clear": "Clear",
+      "clearTooltip": "Clear the sheet",
+      "pasteHint": "Type directly, or copy a range from Excel and paste (Ctrl/Cmd+V). Cell formatting is preserved.",
+      "deleteColumn": "Delete column",
+      "deleteRow": "Delete row",
+      "headerRowMark": "H",
+      "moreRows": "{{n}} more rows not shown — all will be imported.",
+      "moreCols": "{{n}} more columns not shown — all will be imported."
     },
     "resetExtraction": "Reset extraction",
     "autoRefresh": "Auto-refresh",

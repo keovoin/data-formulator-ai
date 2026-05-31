@@ -17,6 +17,8 @@ import {
     TextField,
     Typography,
     Tooltip,
+    ToggleButton,
+    ToggleButtonGroup,
     Link,
     Input,
     alpha,
@@ -40,6 +42,8 @@ import { AppDispatch } from '../app/store';
 import { loadTable } from '../app/tableThunks';
 import { DataSourceConfig, DictTable, ConnectorInstance } from '../components/ComponentType';
 import { createTableFromFromObjectArray, createTableFromText, loadTextDataWrapper, loadBinaryDataWrapper, readFileText } from '../data/utils';
+import { EditableDataSheet } from './EditableDataSheet';
+import { SheetGrid, createEmptySheet, isSheetEmpty, sheetToRecords } from '../data/sheet';
 import { DataLoadingChat } from './DataLoadingChat';
 import { AnimatedAgentToyIcon } from './AgentToyIcon';
 import { AgentChatInput } from './AgentChatInput';
@@ -210,8 +214,11 @@ const DataSourceCard: React.FC<DataSourceCardProps> = ({
         : card;
 };
 
-const getUniqueTableName = (baseName: string, existingNames: Set<string>): string => {
-    let uniqueName = baseName;
+// Default dimensions for the in-app editable paste sheet (rows x columns).
+const SHEET_DEFAULT_ROWS = 8;
+const SHEET_DEFAULT_COLS = 4;
+
+const getUniqueTableName = (baseName: string, existingNames: Set<string>): string => {    let uniqueName = baseName;
     let counter = 1;
     while (existingNames.has(uniqueName)) {
         uniqueName = `${baseName}_${counter}`;
@@ -1205,6 +1212,13 @@ export const UnifiedDataUploadDialog: React.FC<UnifiedDataUploadDialogProps> = (
     const [pasteContent, setPasteContent] = useState<string>("");
     const [isLargeContent, setIsLargeContent] = useState<boolean>(false);
     const [showFullContent, setShowFullContent] = useState<boolean>(false);
+
+    // Paste tab sub-mode: 'sheet' is the in-app editable spreadsheet (type or
+    // paste a range from Excel/Sheets, formatting preserved); 'text' is the
+    // raw CSV/TSV/JSON textarea. Sheet is the default since it needs no file.
+    const [pasteMode, setPasteMode] = useState<'sheet' | 'text'>('sheet');
+    const [sheetCells, setSheetCells] = useState<SheetGrid>(() => createEmptySheet(SHEET_DEFAULT_ROWS, SHEET_DEFAULT_COLS));
+    const [sheetFirstRowHeader, setSheetFirstRowHeader] = useState<boolean>(true);
     
     // File preview state
     const [filePreviewTables, setFilePreviewTables] = useState<DictTable[] | null>(null);
@@ -1291,6 +1305,9 @@ export const UnifiedDataUploadDialog: React.FC<UnifiedDataUploadDialogProps> = (
         setPasteContent("");
         setIsLargeContent(false);
         setShowFullContent(false);
+        setPasteMode('sheet');
+        setSheetCells(createEmptySheet(SHEET_DEFAULT_ROWS, SHEET_DEFAULT_COLS));
+        setSheetFirstRowHeader(true);
         setFilePreviewTables(null);
         setFilePreviewLoading(false);
         setFilePreviewError(null);
@@ -1563,6 +1580,34 @@ export const UnifiedDataUploadDialog: React.FC<UnifiedDataUploadDialogProps> = (
         }
         if (table) {
             // Add source info for paste data
+            const tableWithSource = { ...table, source: { type: 'paste' as const } };
+            setTableLoading(true);
+            try {
+                await dispatch(loadTable({ table: tableWithSource }));
+            } finally {
+                setTableLoading(false);
+            }
+            handleClose();
+        }
+    };
+
+    // Build a table from the in-app editable sheet (typed or pasted data).
+    const handleSheetSubmit = async (): Promise<void> => {
+        const records = sheetToRecords(sheetCells, sheetFirstRowHeader);
+        if (records.length === 0) return;
+
+        const defaultName = (() => {
+            const hashStr = JSON.stringify(records[0]).substring(0, 100) + Date.now();
+            const hashCode = hashStr.split('').reduce((acc, char) => {
+                return ((acc << 5) - acc) + char.charCodeAt(0) | 0;
+            }, 0);
+            const shortHash = Math.abs(hashCode).toString(36).substring(0, 4);
+            return `data-${shortHash}`;
+        })();
+
+        const uniqueName = getUniqueTableName(defaultName, existingNames);
+        const table = createTableFromFromObjectArray(uniqueName, records, true);
+        if (table) {
             const tableWithSource = { ...table, source: { type: 'paste' as const } };
             setTableLoading(true);
             try {
@@ -2232,89 +2277,138 @@ export const UnifiedDataUploadDialog: React.FC<UnifiedDataUploadDialogProps> = (
                         height: '100%',
                         boxSizing: 'border-box',
                         p: 2,
-                        justifyContent: hasPasteContent ? 'flex-start' : 'center',
-                        alignItems: hasPasteContent ? 'stretch' : 'center',
                     }}>
-                        {isLargeContent && (
-                            <Box sx={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                mb: 1, 
-                                p: 1, 
-                                backgroundColor: 'rgba(255, 193, 7, 0.1)', 
-                                borderRadius: 1 
+                        {/* Sub-mode toggle: editable sheet vs raw text */}
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
+                            <ToggleButtonGroup
+                                size="small"
+                                exclusive
+                                value={pasteMode}
+                                onChange={(_e, value) => { if (value) setPasteMode(value); }}
+                                aria-label={t('upload.sheet.modeToggleLabel', { defaultValue: 'Paste input mode' })}
+                            >
+                                <ToggleButton value="sheet" sx={{ textTransform: 'none' }}>
+                                    {t('upload.sheet.modeSheet', { defaultValue: 'Sheet' })}
+                                </ToggleButton>
+                                <ToggleButton value="text" sx={{ textTransform: 'none' }}>
+                                    {t('upload.sheet.modeText', { defaultValue: 'Text' })}
+                                </ToggleButton>
+                            </ToggleButtonGroup>
+                        </Box>
+
+                        {pasteMode === 'sheet' ? (
+                            <>
+                                <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                                    <EditableDataSheet
+                                        cells={sheetCells}
+                                        onChange={setSheetCells}
+                                        firstRowHeader={sheetFirstRowHeader}
+                                        onFirstRowHeaderChange={setSheetFirstRowHeader}
+                                    />
+                                </Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 1 }}>
+                                    <Button
+                                        variant="contained"
+                                        onClick={handleSheetSubmit}
+                                        disabled={isSheetEmpty(sheetCells) || tableLoading}
+                                        startIcon={tableLoading ? <CircularProgress size={16} color="inherit" /> : undefined}
+                                        sx={{ textTransform: 'none' }}
+                                    >
+                                        {tableLoading ? t('upload.loadingTable') : t('upload.uploadData')}
+                                    </Button>
+                                </Box>
+                            </>
+                        ) : (
+                            <Box sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                flex: 1,
+                                minHeight: 0,
+                                justifyContent: hasPasteContent ? 'flex-start' : 'center',
+                                alignItems: hasPasteContent ? 'stretch' : 'center',
                             }}>
-                                <Typography variant="caption" sx={{ flex: 1 }}>
-                                    {t('upload.largeContentDetected', { size: Math.round(pasteContent.length / 1000) })}{' '}
-                                    {showFullContent ? t('upload.showingFullContent') : t('upload.showingPreview')}
-                                </Typography>
-                                <Button 
-                                    size="small" 
-                                    variant="outlined" 
-                                    onClick={toggleFullContent}
-                                    sx={{ textTransform: 'none', minWidth: 'auto' }}
-                                >
-                                    {showFullContent ? t('upload.showPreview') : t('upload.showFull')}
-                                </Button>
+                                {isLargeContent && (
+                                    <Box sx={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        mb: 1, 
+                                        p: 1, 
+                                        backgroundColor: 'rgba(255, 193, 7, 0.1)', 
+                                        borderRadius: 1 
+                                    }}>
+                                        <Typography variant="caption" sx={{ flex: 1 }}>
+                                            {t('upload.largeContentDetected', { size: Math.round(pasteContent.length / 1000) })}{' '}
+                                            {showFullContent ? t('upload.showingFullContent') : t('upload.showingPreview')}
+                                        </Typography>
+                                        <Button 
+                                            size="small" 
+                                            variant="outlined" 
+                                            onClick={toggleFullContent}
+                                            sx={{ textTransform: 'none', minWidth: 'auto' }}
+                                        >
+                                            {showFullContent ? t('upload.showPreview') : t('upload.showFull')}
+                                        </Button>
+                                    </Box>
+                                )}
+
+                                <Box sx={{ width: '100%', maxWidth: hasPasteContent ? 'none' : 720 }}>
+                                    <TextField
+                                        autoFocus
+                                        multiline
+                                        fullWidth
+                                        value={pasteContent}
+                                        onChange={handleContentChange}
+                                        placeholder={t('upload.placeholder.paste')}
+                                        slotProps={{
+                                            input: { readOnly: isLargeContent && !showFullContent },
+                                        }}
+                                        sx={{
+                                            flex: hasPasteContent ? 1 : 'none',
+                                            '& .MuiInputBase-root': {
+                                                height: hasPasteContent ? '100%' : 220,
+                                                alignItems: 'flex-start',
+                                            },
+                                            '& .MuiInputBase-input': {
+                                                fontSize: 12,
+                                                fontFamily: 'monospace',
+                                                height: hasPasteContent ? '100% !important' : 'auto !important',
+                                                overflow: 'auto !important',
+                                            },
+                                            '& .MuiInputBase-input[readonly]': {
+                                                cursor: 'not-allowed',
+                                            }
+                                        }}
+                                    />
+                                    {/* Show preview indicator when in preview mode */}
+                                    {isLargeContent && !showFullContent && (
+                                        <Box sx={{ 
+                                            mt: 0.5, 
+                                            px: 1, 
+                                            py: 0.5, 
+                                            backgroundColor: alpha(theme.palette.info.main, 0.08),
+                                            borderRadius: 0.5,
+                                            border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`
+                                        }}>
+                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                                                {t('upload.previewMode')}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                </Box>
+
+                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 1 }}>
+                                    <Button
+                                        variant="contained"
+                                        onClick={handlePasteSubmit}
+                                        disabled={(pasteContent || '').trim() === '' || tableLoading}
+                                        startIcon={tableLoading ? <CircularProgress size={16} color="inherit" /> : undefined}
+                                        sx={{ textTransform: 'none' }}
+                                    >
+                                        {tableLoading ? t('upload.loadingTable') : t('upload.uploadData')}
+                                    </Button>
+                                </Box>
                             </Box>
                         )}
-
-                        <Box sx={{ width: '100%', maxWidth: hasPasteContent ? 'none' : 720 }}>
-                            <TextField
-                                autoFocus
-                                multiline
-                                fullWidth
-                                value={pasteContent}
-                                onChange={handleContentChange}
-                                placeholder={t('upload.placeholder.paste')}
-                                slotProps={{
-                                    input: { readOnly: isLargeContent && !showFullContent },
-                                }}
-                                sx={{
-                                    flex: hasPasteContent ? 1 : 'none',
-                                    '& .MuiInputBase-root': {
-                                        height: hasPasteContent ? '100%' : 220,
-                                        alignItems: 'flex-start',
-                                    },
-                                    '& .MuiInputBase-input': {
-                                        fontSize: 12,
-                                        fontFamily: 'monospace',
-                                        height: hasPasteContent ? '100% !important' : 'auto !important',
-                                        overflow: 'auto !important',
-                                    },
-                                    '& .MuiInputBase-input[readonly]': {
-                                        cursor: 'not-allowed',
-                                    }
-                                }}
-                            />
-                            {/* Show preview indicator when in preview mode */}
-                            {isLargeContent && !showFullContent && (
-                                <Box sx={{ 
-                                    mt: 0.5, 
-                                    px: 1, 
-                                    py: 0.5, 
-                                    backgroundColor: alpha(theme.palette.info.main, 0.08),
-                                    borderRadius: 0.5,
-                                    border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`
-                                }}>
-                                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                                        {t('upload.previewMode')}
-                                    </Typography>
-                                </Box>
-                            )}
-                        </Box>
-
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 1 }}>
-                            <Button
-                                variant="contained"
-                                onClick={handlePasteSubmit}
-                                disabled={(pasteContent || '').trim() === '' || tableLoading}
-                                startIcon={tableLoading ? <CircularProgress size={16} color="inherit" /> : undefined}
-                                sx={{ textTransform: 'none' }}
-                            >
-                                {tableLoading ? t('upload.loadingTable') : t('upload.uploadData')}
-                            </Button>
-                        </Box>
                     </Box>
                 </TabPanel>
 
