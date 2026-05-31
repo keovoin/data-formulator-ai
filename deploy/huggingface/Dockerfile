@@ -22,8 +22,12 @@ ARG REPO_URL=https://github.com/keovoin/data-formulator-ai.git
 ARG REPO_BRANCH=add-editable-paste-sheet
 RUN git clone --depth 1 --branch ${REPO_BRANCH} ${REPO_URL} .
 
-# Builds into py-src/data_formulator/dist
-RUN yarn install --frozen-lockfile && yarn build
+# Builds into py-src/data_formulator/dist.
+# NOTE: plain `yarn install` (not --frozen-lockfile) because the committed
+# yarn.lock is slightly out of sync with package.json; the strict flag aborts
+# the build. Letting yarn refresh the lockfile in-container is what Vercel did
+# successfully and is fine for a personal deployment.
+RUN yarn install --network-timeout 600000 && yarn build
 
 # ---------------------------------------------------------------------------
 # Stage 2: Python runtime with the built frontend bundled in
