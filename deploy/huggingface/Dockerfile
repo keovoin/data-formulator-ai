@@ -13,7 +13,9 @@
 # ---------------------------------------------------------------------------
 FROM node:20-slim AS builder
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends git \
+# ca-certificates is required so `git` can verify GitHub's HTTPS certificate
+# (the slim image ships without root CAs).
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 ARG REPO_URL=https://github.com/keovoin/data-formulator-ai.git
@@ -29,7 +31,7 @@ RUN yarn install --frozen-lockfile && yarn build
 FROM python:3.11-slim AS runtime
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        gcc g++ libpq-dev unixodbc-dev curl \
+        gcc g++ libpq-dev unixodbc-dev curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 ENV LANG=C.UTF-8
