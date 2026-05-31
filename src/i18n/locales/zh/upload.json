@@ -6,7 +6,7 @@
     "uploadFile": "上传文件",
     "uploadFileDesc": "CSV、TSV、JSON 或 Excel",
     "pasteData": "粘贴数据",
-    "pasteDataDesc": "从剪贴板粘贴",
+    "pasteDataDesc": "在表格中输入或从 Excel 粘贴",
     "extractData": "数据加载助手",
     "extractDataDesc": "使用 AI 查找并提取数据",
     "loadFromUrl": "从 URL 加载",
@@ -26,6 +26,22 @@
     },
     "helperText": {
       "urlInvalid": "请输入以 http://、https:// 或 / 开头的有效 URL"
+    },
+    "sheet": {
+      "modeToggleLabel": "粘贴输入方式",
+      "modeSheet": "表格",
+      "modeText": "文本",
+      "firstRowHeader": "首行作为表头",
+      "addRow": "行",
+      "addColumn": "列",
+      "clear": "清空",
+      "clearTooltip": "清空表格",
+      "pasteHint": "可直接输入，或从 Excel 复制区域后粘贴（Ctrl/Cmd+V）。会保留单元格格式。",
+      "deleteColumn": "删除列",
+      "deleteRow": "删除行",
+      "headerRowMark": "表头",
+      "moreRows": "还有 {{n}} 行未显示 —— 全部都会被导入。",
+      "moreCols": "还有 {{n}} 列未显示 —— 全部都会被导入。"
     },
     "resetExtraction": "重置提取",
     "autoRefresh": "自动刷新",
