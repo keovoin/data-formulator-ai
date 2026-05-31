@@ -1,0 +1,56 @@
+# Render Blueprint — one-click free hosting for Data Formulator.
+#
+# How to use (all in the browser, no local setup):
+#   1. Push this repo to your own GitHub account (already done: keovoin/data-formulator-ai).
+#   2. Go to https://dashboard.render.com  ->  New  ->  Blueprint.
+#   3. Connect this repository and pick the branch that has the feature
+#      (e.g. "add-editable-paste-sheet" or "main" once merged).
+#   4. Render reads this file and creates the web service. When prompted,
+#      paste your OpenRouter API key into OPENROUTER_API_KEY (it is kept
+#      secret and is NOT stored in the repo).
+#   5. Click Apply. First build takes a few minutes; then open the URL.
+#
+# Notes
+#   * Free tier spins down after ~15 min of inactivity and cold-starts in
+#     ~1 min on the next visit. Uploaded/pasted data is not persisted across
+#     restarts on the free tier (the paste-sheet workflow re-enters data each
+#     session, so this is usually fine for personal use).
+#   * Custom models stay enabled (we do NOT set DISABLE_CUSTOM_MODELS), so you
+#     can add any extra model from the in-app "Select models" dialog.
+#   * The default model is the first entry in OPENROUTER_MODELS below
+#     (Llama 3.3 70B free). Reorder the list to change the default.
+
+services:
+  - type: web
+    name: data-formulator
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      # Bind to all interfaces so Render can route traffic to the container.
+      - key: HOST
+        value: "0.0.0.0"
+
+      # Stable session signing key so logins/sessions survive restarts.
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+
+      # ---- OpenRouter (OpenAI-compatible) ------------------------------
+      # OpenRouter is registered as a custom provider. The "openai" endpoint
+      # + api_base makes Data Formulator call OpenRouter's OpenAI-compatible
+      # API through LiteLLM.
+      - key: OPENROUTER_ENABLED
+        value: "true"
+      - key: OPENROUTER_ENDPOINT
+        value: "openai"
+      - key: OPENROUTER_API_BASE
+        value: "https://openrouter.ai/api/v1"
+      # First model = the default selected in the UI. ":free" is rate-limited
+      # but costs nothing; the paid slug right after it is more reliable.
+      - key: OPENROUTER_MODELS
+        value: "meta-llama/llama-3.3-70b-instruct:free,meta-llama/llama-3.3-70b-instruct,openai/gpt-4o-mini,anthropic/claude-3.5-sonnet,google/gemini-2.0-flash-001,deepseek/deepseek-chat"
+      # Secret — Render prompts for this at deploy time (not stored in git).
+      - key: OPENROUTER_API_KEY
+        sync: false
