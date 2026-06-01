@@ -605,10 +605,7 @@ export const DataFormulatorFC = ({ }) => {
             target="_blank" rel="noopener noreferrer" 
             href="https://www.microsoft.com/en-us/legal/intellectualproperty/copyright">{t('footer.termsOfUse')}</Button>
         <Divider orientation="vertical" variant="middle" flexItem sx={{ mx: 1 }} />
-        <Button size="small" color="inherit" 
-            sx={{ textTransform: 'none'}} 
-            target="_blank" rel="noopener noreferrer" 
-            href="https://github.com/microsoft/data-formulator/issues">{t('footer.contactUs')}</Button>
+        <Typography sx={{ display: 'inline', fontSize: '12px' }}>{t('footer.customCredit')}</Typography>
         <Typography sx={{ display: 'inline', fontSize: '12px', ml: 1 }}> @ {new Date().getFullYear()}</Typography>
     </Box>
 

@@ -853,79 +853,11 @@ const AppShell: FC = () => {
                         {isGalleryPage && (
                             <Box sx={{ display: 'flex', ml: 'auto', fontSize: 14, alignItems: 'center' }}>
                                 <LanguageSwitcher />
-                                <Tooltip title={t('appBar.viewOnGitHub')}>
-                                    <IconButton
-                                        component="a"
-                                        href="https://github.com/microsoft/data-formulator"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        aria-label={t('appBar.viewOnGitHub')}
-                                        sx={{
-                                            color: 'inherit',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                                            }
-                                        }}
-                                    >
-                                        <GitHubIcon fontSize="small" />
-                                    </IconButton>
-                                </Tooltip>
                             </Box>
                         )}
                         {isAboutPage && (
                             <Box sx={{ ml: 'auto', display: 'flex', gap: 0.5 }}>
                                 <LanguageSwitcher />
-                                <Tooltip title={t('appBar.watchVideo')}>
-                                    <IconButton
-                                        component="a"
-                                        href="https://youtu.be/3ndlwt0Wi3c"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        aria-label={t('appBar.watchVideo')}
-                                        sx={{
-                                            color: 'inherit',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                                            }
-                                        }}
-                                    >
-                                        <YouTubeIcon fontSize="small" />
-                                    </IconButton>
-                                </Tooltip>
-                                <Tooltip title={t('appBar.viewOnGitHub')}>
-                                    <IconButton
-                                        component="a"
-                                        href="https://github.com/microsoft/data-formulator"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        aria-label={t('appBar.viewOnGitHub')}
-                                        sx={{
-                                            color: 'inherit',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                                            }
-                                        }}
-                                    >
-                                        <GitHubIcon fontSize="small" />
-                                    </IconButton>
-                                </Tooltip>
-                                <Tooltip title={t('appBar.pipInstall')}>
-                                    <IconButton
-                                        component="a"
-                                        href="https://pypi.org/project/data-formulator/"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        aria-label={t('appBar.pipInstall')}
-                                        sx={{
-                                            color: 'inherit',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                                            }
-                                        }}
-                                    >
-                                        <Box component="img" src="/pip-logo.svg" sx={{ width: 20, height: 20 }} alt="pip logo" />
-                                    </IconButton>
-                                </Tooltip>
                                 <Tooltip title={t('appBar.joinDiscord')}>
                                     <IconButton
                                         component="a"
@@ -944,25 +876,6 @@ const AppShell: FC = () => {
                                     </IconButton>
                                 </Tooltip>
                             </Box>
-                        )}
-                        {isAppPage && (
-                            <Tooltip title={t('appBar.viewOnGitHub')}>
-                                <Button
-                                    component="a"
-                                    href="https://github.com/microsoft/data-formulator"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    sx={{
-                                        minWidth: 'auto',
-                                        color: 'inherit',
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                                        }
-                                    }}
-                                >
-                                    <GitHubIcon fontSize="medium" />
-                                </Button>
-                            </Tooltip>
                         )}
                         <AuthButton />
                     </Toolbar>

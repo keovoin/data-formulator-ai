@@ -5,8 +5,6 @@ import { Box, Typography, Button, useTheme, alpha, Divider } from "@mui/material
 import { borderColor, radius } from '../app/tokens';
 import React, { FC } from "react";
 import GridViewIcon from '@mui/icons-material/GridView';
-import GitHubIcon from '@mui/icons-material/GitHub';
-import YouTubeIcon from '@mui/icons-material/YouTube';
 import { AgentIcon as PrecisionManufacturingIcon } from '../icons';
 
 import { toolName } from "../app/App";
@@ -55,35 +53,11 @@ export const About: FC<{}> = function About({ }) {
 
     let actionButtons = (
         <Box component="nav" aria-label="Primary actions" sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mb: 4, flexWrap: 'wrap' }}>
-            <Button size="large" variant="outlined" color="primary" 
-                sx={{ textTransform: 'none' }}
-                startIcon={<Box component="img" sx={{ width: 20, height: 20 }} alt="" aria-hidden="true" src="/pip-logo.svg" />}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={t('about.installViaPipAria')}
-                href="https://pypi.org/project/data-formulator/"
-            >{t('about.installLocally')}</Button>
             <Button size="large" variant="contained" color="primary" 
                 sx={{ textTransform: 'none' }}
                 startIcon={<GridViewIcon aria-hidden="true" />}
                 href="/app"
             >{t('about.tryOnlineDemo')}</Button>
-            <Button size="large" variant="outlined" color="primary" 
-                sx={{ textTransform: 'none' }}
-                startIcon={<YouTubeIcon sx={{ color: '#FF0000' }} aria-hidden="true" />}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={t('about.watchVideoAria')}
-                href="https://www.youtube.com/watch?v=GfTE2FLyMrs"
-            >{t('about.video')}</Button>
-            <Button size="large" variant="outlined" color="primary" 
-                sx={{ textTransform: 'none' }}
-                startIcon={<GitHubIcon aria-hidden="true" />}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={t('about.viewGithubAria')}
-                href="https://github.com/microsoft/data-formulator"
-            >{t('about.github')}</Button>
         </Box>
     );
 
@@ -240,12 +214,9 @@ export const About: FC<{}> = function About({ }) {
                         aria-label={t('footer.termsOfUseAria')}
                         href="https://www.microsoft.com/en-us/legal/intellectualproperty/copyright">{t('footer.termsOfUse')}</Button>
                 <Divider orientation="vertical" variant="middle" flexItem sx={{ mx: 1 }} aria-hidden="true" />
-                <Button size="small" color="inherit" 
-                        sx={{ textTransform: 'none' }} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        aria-label={t('footer.contactUsAria')}
-                        href="https://github.com/microsoft/data-formulator/issues">{t('footer.contactUs')}</Button>
+                <Typography component="span" sx={{ fontSize: '12px' }}>
+                    {t('footer.customCredit')}
+                </Typography>
                 <Typography component="span" sx={{ fontSize: '12px', ml: 1 }}>© {new Date().getFullYear()}</Typography>
             </Box>
         </Box>)
