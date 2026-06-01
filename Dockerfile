@@ -63,10 +63,13 @@ USER appuser
 
 EXPOSE 5567
 
+# Honor a platform-provided $PORT (Railway, Render, Cloud Run, etc.) and fall
+# back to 5567 for plain `docker run`. The healthcheck uses the same value.
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD curl -f http://localhost:5567/ || exit 1
+  CMD curl -f http://localhost:${PORT:-5567}/ || exit 1
 
-# Run the app on all interfaces so Docker port-forwarding works.
+# Run the app on all interfaces so Docker/host port-forwarding works.
+# Shell form + exec so ${PORT} expands and SIGTERM still reaches Python.
 # We do not pass --dev so Flask runs in production mode (no debugger/reloader).
 # webbrowser.open() fails silently in a headless container, which is harmless.
-ENTRYPOINT ["python", "-m", "data_formulator", "--host", "0.0.0.0", "--port", "5567"]
+ENTRYPOINT ["sh", "-c", "exec python -m data_formulator --host 0.0.0.0 --port ${PORT:-5567}"]
