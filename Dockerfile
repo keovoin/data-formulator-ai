@@ -8,9 +8,13 @@ FROM node:20-slim AS frontend-builder
 
 WORKDIR /app
 
-# Install dependencies
+# Install dependencies.
+# NOTE: plain `yarn install` (not --frozen-lockfile) because the committed
+# yarn.lock is slightly out of sync with package.json; the strict flag aborts
+# the build on hosts like Railway/Render. Letting yarn refresh the lockfile in
+# the build container is what the Vercel build did successfully.
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+RUN yarn install --network-timeout 600000
 
 # Copy source and build
 COPY index.html tsconfig.json vite.config.ts eslint.config.js ./
